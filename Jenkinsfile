@@ -16,6 +16,7 @@ pipeline {
                 docker rm -f backend1 backend2 || true
                 docker run -d --name backend1 --network app-network backend-app
                 docker run -d --name backend2 --network app-network backend-app
+                sleep 5
                 '''
             }
         }
@@ -24,13 +25,19 @@ pipeline {
                 sh '''
                 docker rm -f nginx-lb || true
                 
+                # Start NGINX container
                 docker run -d \
                   --name nginx-lb \
                   --network app-network \
                   -p 80:80 \
                   nginx
                 
+                # Wait for NGINX to initialize before copying config
+                sleep 2
+
+                # REMOVED "CC_LAB-6/" FROM PATH BELOW:
                 docker cp nginx/default.conf nginx-lb:/etc/nginx/conf.d/default.conf
+                
                 docker exec nginx-lb nginx -s reload
                 '''
             }
